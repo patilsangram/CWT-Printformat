@@ -1,0 +1,27 @@
+.table-condensed td{
+    border:0px !important;
+}
+.table-condensed thead{
+    border-top: 1px solid black !important;
+    border-bottom: 0.7px solid black;
+}
+.table-condensed{
+    border: 0.7px solid black;
+    margin-bottom:20px;
+}
+
+.table-condensed tr{
+   line-height: 5px;
+   min-height: 5px;
+   height: 5px;
+}
+
+.table-item td {
+   border:0px !important;
+}
+.table-item thead, .table-item tbody{
+    border-top: 0.5px solid black;
+}
+.table-condensed #head{
+  background-color: gray !important;
+}

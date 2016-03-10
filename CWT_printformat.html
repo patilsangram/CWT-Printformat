@@ -1,0 +1,159 @@
+<!-- for adding values from doctype use jinja scriptgiven below :
+{{doc.field_name}}
+e.g. : {{doc.item_code}}
+  -->
+
+ 
+
+{%- from "templates/print_formats/standard_macros.html" import add_header,
+	 render_field -%}
+<div id="header-html" class="hidden-pdf">
+     {{ add_header(0,1,doc,letter_head, no_letterhead) }}
+</div>
+<div id="footer-html" class="visible-pdf">
+	{% if not no_letterhead and footer %}
+	<div class="letter-head-footer">
+		{{ footer }}
+	</div>
+	{% endif %}
+	<p class="text-center small page-number visible-pdf">
+		{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
+	</p>
+</div>
+
+<div class="row">
+	<div class="col-xs-6">
+		<p>	
+			{{frappe.db.get_value("Address", doc.customer_address, "address_title")}}<br>
+			{{frappe.db.get_value("Address", doc.customer_address, "address_line1")}}<br>
+			{{frappe.db.get_value("Address", doc.customer_address, "city")}}<br>
+			Email : {{frappe.db.get_value("Address", doc.customer_address, "email_id")}}<br>
+			Phone : {{frappe.db.get_value("Address", doc.customer_address, "phone")}}<br><br>
+		</p>
+
+		<p><b>Lieferanschrift:</b><br>
+			{{frappe.db.get_value("Address", {"customer": doc.customer, "address_type":"Shipping"}, "address_title")}}<br>
+			{{frappe.db.get_value("Address", {"customer": doc.customer, "address_type":"Shipping"}, "address_line1")}}<br>
+			{{frappe.db.get_value("Address", {"customer": doc.customer, "address_type":"Shipping"}, "city")}}<br>
+			Email : {{frappe.db.get_value("Address", {"customer": doc.customer, "address_type":"Shipping"}, "email_id")}}<br>
+			Phone : {{frappe.db.get_value("Address",{"customer": doc.customer, "address_type":"Shipping"}, "phone")}}<br>
+		</p>
+	</div>
+	<div class="col-xs-6">
+			<table class="table table-condensed">
+			    <thead>
+			    	<tr>
+			        	<td colspan="2", align="center", id="head"><b>AUFTRAGSBESTÄTIGUNG</b></th>
+			    	 </tr>
+			    </thead>
+			    <tbody>
+		    		<tr><td>Auftrags-Nr.: </td>
+		    			<td>{{doc.name}}</td>
+		    		</tr>
+		    		<tr><td>Beleg Datum: </td>
+		    			<td class="mini">{{ doc.get_formatted("delivery_date") or ''}}</td>
+		    		</tr>
+		    		<tr><td>Kunden-Nr.: </td>
+		    			<td></td>			                 
+		    		</tr>
+		    		<tr><td>Ihre Bestellung: </td>
+		    			<td class="mini"></td>
+		    		</tr>
+		    		<tr><td>Sachbearbeiter: </td>
+		    			<td>{{doc.po_no  or ''}}</td>
+		    		</tr>
+		    		<tr><td>vom: </td>
+		    			<td>{{doc.get_formatted("po_date")  or ''}}</td>
+		    		</tr>
+		    		<tr><td>Telefon: </td>
+		    			<td>{{frappe.db.get_value("Address", doc.customer_address, "phone")  or ''}}</td>	
+		    		</tr>
+		    		<tr><td>E-mail: </td>
+		    			<td>{{frappe.db.get_value("Address", doc.customer_address, "email_id")  or ''}}</td>
+		    		</tr>
+		    		<tr><td>Lieferantennr: </td>
+		    			<td>{{frappe.db.get_value("Address", doc.customer_address, "supplier")  or ''}}</td>
+		    		</tr>
+		    		<tr><td>lhr Zeichen: </td>
+		    			<td>{{doc.customer  or ''}}</td>
+		    		</tr>
+			    </tbody>
+			</table>		
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<table class="table table-item"style="table-layout: fixed;">
+		    <thead>
+		      <tr>
+		        <td style="width: 10%">Pos </td>
+		        <td style="width: 25%">Artikel-Nr. </td>
+		        <td style="width: 30%">Bezeichnung </td>
+		        <td style="width:15%">Menge </td>
+		        <td style="width:20%"> Einheit </td>
+		        <td style="width:25%"> Preis in EUR </td>
+		        <td style="width:25%">Gesamtpreis </td>
+		      </tr>
+		    </thead>
+		    <tbody>
+		      {% set max_len = (doc.items | length) %}
+		      {% set count=1 %}
+		      {%- for row in range(0,max_len) -%}
+			    <tr>
+			    	<td>{{count}}</td>
+			    	<td></td>
+		        	<td>{{doc.items[row].item_code or ''}}</td>
+		        	<td>{{doc.items[row].qty or ''}}</td>
+		        	<td>{{frappe.db.get_value("Item Price", {"item_code":doc.items[row].item_code}, "price_list_rate") or ''}}
+		        	</td>
+		        	<td>{{doc.items[row].rate or ''}}</td>
+		        	<td>{{doc.items[row].amount or ''}}</td>
+    			</tr>
+    			{% set count=count+1 %}
+    			{%- endfor -%}
+		    </tbody>
+  		</table>
+  	</div>
+</div>
+<div class="row">
+	<div class="col-xs-7"></div>
+	<div class="col-xs-5">
+		<div class="row">
+			<div class="col-xs-6">Warenwert</div>
+			<div class="col-xs-6"><b>{{ doc.get_formatted("total") or ''}}</b></div>
+		</div>
+		<div class="row">
+			<div class="col-xs-6">Mehrwertsteuer </div>
+			<div class="col-xs-6"><b>{{ doc.get_formatted("total_taxes_and_charges") or ''}}</b></div>
+		</div>
+		<hr height="1px">
+		<div class="row">
+			<div class="col-xs-6"><b>Endbetrag EUR</b> </div>
+			<div class="col-xs-6"><b>{{ doc.get_formatted("grand_total") or '' }}</b></div>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<div class="row">
+			<div class="col-xs-4">Versandart </div>
+			<div class="col-xs-8"></div>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<div class="row">
+			<div class="col-xs-4">Lieferbedingungen</div>
+			<div class="col-xs-8">{{doc.terms or ''}}</div>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-xs-12">
+		<div class="row">
+			<div class="col-xs-4">Zahlungsbedingungen</div>
+			<div class="col-xs-8"></div>
+		</div>
+	</div>
+</div>
