@@ -1,0 +1,123 @@
+    <style>
+        .print-format table, .print-format tr, 
+        .print-format td, .print-format div, .print-format p{
+            font-family: Calibri; 
+            line-height: 80%;
+            vertical-align: middle;
+        }
+        .print-format tr, .print-format div {
+            font-family: Calibri;
+            line-height: 30%;
+            vertical-align: middle;
+        }
+        @media screen {
+            .print-format {
+                width: 3.14in;
+                padding: 0.39in;
+                min-height: 8in;
+            }
+        }
+        hr {
+            border-top: dotted 1.5px;
+            }
+        .table-item thead th {
+             border: 1px solid gray;
+        }
+        .table-item thead tr th {
+            background-color: white !important;
+        }
+        .table-item {   
+            border-top: 1px solid gray;     
+        }
+
+    </style>
+    
+
+    {%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead) -%}
+        {% if letter_head and not no_letterhead %}
+        <div class="letter-head">{{ letter_head }}</div>
+        {% endif %}
+    {%- endmacro -%}
+
+    <div id="header-html" class="hidden-pdf">
+                 {{ add_header(0,1,doc,letter_head, no_letterhead) }}
+    </div>
+   
+    <p class="text-left">{{ frappe.db.get_value("Warehouse",doc.items[0].target_warehouse,'address_line_1') or ''}}<br>
+        {{ frappe.db.get_value("Warehouse",doc.items[0].target_warehouse,'address_line_2') or ''}}<br>
+        {{ frappe.db.get_value("Warehouse",doc.items[0].target_warehouse,'phone_no')or ''}}
+    </p><br>
+
+    <p class="text-center"><b>{{ doc.select_print_heading or _("Retail Invoice")}}  </b>
+    </p><hr>
+    
+    <p>
+        {{ _("Receipt No") }}:{{ doc.name }}<br>
+        {{ _("Date") }}:{{ doc.get_formatted("posting_date") }}<br>
+        {{ _("Customer ID")}}: {{frappe.db.get_value("Contact",{"customer_name":doc.customer_name},'mobile_no') or ''}}<br>
+        {{ _("Customer") }}: {{ doc.customer_name }}<br>
+    </p>
+
+    <hr>
+    <table class="table table-item">
+        <thead>
+            <tr>
+                <th width="2">{{ _("S.No")}}
+                <th width="25%">{{ _("Item") }}</b></th>
+                <th width="55%" class="text-center">{{ _("Qty") }}</th>
+                <th width="18%" class="text-center">{{ _("Amount") }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for item in doc.items -%}
+            <tr>
+                <td width="2">{{ item.idx }}</td>
+                <td width="25%">
+                    {{ item.item_code }}
+                    {%- if item.item_name != item.item_code -%}
+                        <br>{{ item.item_name }}{%- endif -%}
+                </td>
+                <td class="text-center" width="55%">{{ item.qty }}<br>@{{ item.rate }}
+                </td>
+                <td width="18%" class="text-center">{{ item.amount }}</td>
+            </tr>
+            {%- endfor -%}
+        </tbody>
+    </table>
+    <table class="table table-condensed no-border">
+        <tbody>
+            <tr>
+                <td class="text-left" style="width: 70%">
+                    {{ _("Net Total") }}
+                </td>
+                <td class="text-right">
+                    {{ doc.net_total }}
+                </td>
+            </tr>
+            {%- for row in doc.taxes -%}
+            {%- if not row.included_in_print_rate -%}
+            <tr>
+                <td class="text-left" style="width: 70%">
+                    {{ row.description }}
+                </td>
+                <td class="text-right">
+                    {{ row.tax_amount}}
+                </td>
+            </tr>
+            {%- endif -%}
+            {%- endfor -%}
+        </tbody>
+    </table>
+    <hr>
+    <p>{{ _("Payment Details")}}</p>
+    <div class="row"><div class="col-xs-9">{{ _("Cash")}}:</div>
+    <div class="col-xs-3">{{ doc.grand_total }}</div></div>
+    <p>{{ doc.in_words }}</p>
+    <p>{{ _("Inclusive of all taxes")}}</p><hr>
+    <p>{{ _("TIN No: 36660143991")}}</p><hr>
+
+    <p class="text-left">{{ _("Thank you, please visit again.") }}</p>
+    <p class="text-center"><b style="font-size: 70%;">{{ _("(A unit of furniture world)")}}</b></p>     
+
+    
+
